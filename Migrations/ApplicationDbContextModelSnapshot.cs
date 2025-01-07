@@ -185,6 +185,9 @@ namespace RhManagementApi.Migrations
                     b.Property<int>("ManagerId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ManagerId1")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -199,6 +202,8 @@ namespace RhManagementApi.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ManagerId");
+
+                    b.HasIndex("ManagerId1");
 
                     b.ToTable("Teams");
                 });
@@ -238,6 +243,12 @@ namespace RhManagementApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Cin")
+                        .IsUnique();
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
 
                     b.UseTptMappingStrategy();
@@ -246,6 +257,14 @@ namespace RhManagementApi.Migrations
             modelBuilder.Entity("RhManagementApi.Model.Admin", b =>
                 {
                     b.HasBaseType("RhManagementApi.Model.User");
+
+                    b.Property<string>("AccessLevel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.ToTable("Admins", (string)null);
                 });
@@ -263,8 +282,13 @@ namespace RhManagementApi.Migrations
                     b.Property<int>("HolidayBalance")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("RHId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("TeamId")
                         .HasColumnType("integer");
+
+                    b.HasIndex("RHId");
 
                     b.HasIndex("TeamId");
 
@@ -275,6 +299,13 @@ namespace RhManagementApi.Migrations
                 {
                     b.HasBaseType("RhManagementApi.Model.Employee");
 
+                    b.Property<string>("ManagementLevel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("YearsOfExperience")
+                        .HasColumnType("integer");
+
                     b.ToTable("Managers", (string)null);
                 });
 
@@ -282,13 +313,21 @@ namespace RhManagementApi.Migrations
                 {
                     b.HasBaseType("RhManagementApi.Model.Employee");
 
+                    b.Property<string>("Certification")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.ToTable("RHs", (string)null);
                 });
 
             modelBuilder.Entity("RhManagementApi.Model.Leave", b =>
                 {
                     b.HasOne("RhManagementApi.Model.Admin", "Admin")
-                        .WithMany()
+                        .WithMany("ManagedLeaves")
                         .HasForeignKey("AdminId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -334,6 +373,10 @@ namespace RhManagementApi.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("RhManagementApi.Model.Manager", null)
+                        .WithMany("ManagedTeams")
+                        .HasForeignKey("ManagerId1");
+
                     b.Navigation("Manager");
                 });
 
@@ -353,6 +396,10 @@ namespace RhManagementApi.Migrations
                         .HasForeignKey("RhManagementApi.Model.Employee", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("RhManagementApi.Model.RH", null)
+                        .WithMany("ManagedEmployees")
+                        .HasForeignKey("RHId");
 
                     b.HasOne("RhManagementApi.Model.Team", "Team")
                         .WithMany("Employees")
@@ -383,6 +430,21 @@ namespace RhManagementApi.Migrations
             modelBuilder.Entity("RhManagementApi.Model.Team", b =>
                 {
                     b.Navigation("Employees");
+                });
+
+            modelBuilder.Entity("RhManagementApi.Model.Admin", b =>
+                {
+                    b.Navigation("ManagedLeaves");
+                });
+
+            modelBuilder.Entity("RhManagementApi.Model.Manager", b =>
+                {
+                    b.Navigation("ManagedTeams");
+                });
+
+            modelBuilder.Entity("RhManagementApi.Model.RH", b =>
+                {
+                    b.Navigation("ManagedEmployees");
                 });
 #pragma warning restore 612, 618
         }

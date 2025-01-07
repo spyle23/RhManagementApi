@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace RhManagementApi.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateSchema : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -52,7 +52,9 @@ namespace RhManagementApi.Migrations
                 name: "Admins",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Department = table.Column<string>(type: "text", nullable: false),
+                    AccessLevel = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -96,7 +98,8 @@ namespace RhManagementApi.Migrations
                     DateOfHiring = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     HolidayBalance = table.Column<int>(type: "integer", nullable: false),
                     BalancePermission = table.Column<int>(type: "integer", nullable: false),
-                    TeamId = table.Column<int>(type: "integer", nullable: true)
+                    TeamId = table.Column<int>(type: "integer", nullable: true),
+                    RHId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -146,7 +149,9 @@ namespace RhManagementApi.Migrations
                 name: "Managers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    ManagementLevel = table.Column<string>(type: "text", nullable: false),
+                    YearsOfExperience = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -189,7 +194,9 @@ namespace RhManagementApi.Migrations
                 name: "RHs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Specialization = table.Column<string>(type: "text", nullable: false),
+                    Certification = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -211,6 +218,7 @@ namespace RhManagementApi.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Specialty = table.Column<string>(type: "text", nullable: false),
                     ManagerId = table.Column<int>(type: "integer", nullable: false),
+                    ManagerId1 = table.Column<int>(type: "integer", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -223,7 +231,17 @@ namespace RhManagementApi.Migrations
                         principalTable: "Managers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Teams_Managers_ManagerId1",
+                        column: x => x.ManagerId1,
+                        principalTable: "Managers",
+                        principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_RHId",
+                table: "Employees",
+                column: "RHId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Employees_TeamId",
@@ -255,6 +273,30 @@ namespace RhManagementApi.Migrations
                 table: "Teams",
                 column: "ManagerId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_ManagerId1",
+                table: "Teams",
+                column: "ManagerId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Cin",
+                table: "Users",
+                column: "Cin",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Employees_RHs_RHId",
+                table: "Employees",
+                column: "RHId",
+                principalTable: "RHs",
+                principalColumn: "Id");
+
             migrationBuilder.AddForeignKey(
                 name: "FK_Employees_Teams_TeamId",
                 table: "Employees",
@@ -269,6 +311,10 @@ namespace RhManagementApi.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_Employees_Users_Id",
+                table: "Employees");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Employees_RHs_RHId",
                 table: "Employees");
 
             migrationBuilder.DropForeignKey(
@@ -288,13 +334,13 @@ namespace RhManagementApi.Migrations
                 name: "Payslips");
 
             migrationBuilder.DropTable(
-                name: "RHs");
-
-            migrationBuilder.DropTable(
                 name: "Admins");
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "RHs");
 
             migrationBuilder.DropTable(
                 name: "Teams");

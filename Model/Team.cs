@@ -14,7 +14,7 @@ namespace RhManagementApi.Model
         public string Specialty { get; set; } = string.Empty;
         
         public int ManagerId { get; set; }
-        public Manager Manager { get; set; }
+        public Manager Manager { get; set; } = new Manager();
         
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
