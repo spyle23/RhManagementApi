@@ -29,6 +29,7 @@ namespace RhManagementApi.Controllers
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
+
             if (user == null)
             {
                 return Unauthorized("Invalid email or password");
@@ -39,36 +40,51 @@ namespace RhManagementApi.Controllers
                 return Unauthorized("Invalid email or password");
             }
 
-            string token = CreateToken(user);
+            AuthReturnDto auth = CreateToken(user);
 
-            return Ok(new { token });
+            return Ok(auth);
         }
 
-        private string CreateToken(User user)
+        private AuthReturnDto CreateToken(User user)
         {
+            var role = "";
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.GivenName, user.FirstName),
-                new Claim(ClaimTypes.Surname, user.LastName),
-                new Claim("Cin", user.Cin.ToString())
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.GivenName, user.FirstName),
+        new Claim(ClaimTypes.Surname, user.LastName),
+        new Claim("Cin", user.Cin.ToString())
+    };
 
             // Add role-based claims
             if (user is Admin)
+            {
                 claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                role = "Admin";
+            }
             else if (user is RH)
+            {
                 claims.Add(new Claim(ClaimTypes.Role, "RH"));
+                role = "RH";
+            }
             else if (user is Manager)
+            {
                 claims.Add(new Claim(ClaimTypes.Role, "Manager"));
+                role = "Manager";
+            }
             else if (user is Employee)
+            {
                 claims.Add(new Claim(ClaimTypes.Role, "Employee"));
+                role = "Employee";
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value!));
+                _configuration.GetSection("AppSettings:Token").Value ??
+                throw new InvalidOperationException("Token key is not configured")));
 
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            // You can also optionally use HmacSha256Signature instead if you prefer
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["AppSettings:Issuer"],
@@ -78,7 +94,7 @@ namespace RhManagementApi.Controllers
                 signingCredentials: credentials
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new AuthReturnDto { UserId = user.Id, Role = role, Token =  new JwtSecurityTokenHandler().WriteToken(token) };
         }
     }
 } 

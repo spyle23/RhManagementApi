@@ -1,13 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
-namespace RhManagementApi.Model
+namespace RhManagementApi.DTOs
 {
-    [Index(nameof(Cin), IsUnique = true)]
-    [Index(nameof(Email), IsUnique = true)]
-    public class User : BaseEntity
+    public class UserWithRoleDto
     {
-        [Key]
         public int Id { get; set; }
 
         [Required]
@@ -24,8 +20,8 @@ namespace RhManagementApi.Model
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string Password { get; set; } = string.Empty;
-
+        public string Role { get; set; } = string.Empty;
         public string? Picture { get; set; } = string.Empty;
+
     }
 }

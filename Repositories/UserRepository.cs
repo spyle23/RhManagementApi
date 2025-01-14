@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RhManagementApi.Data;
+using RhManagementApi.DTOs;
 using RhManagementApi.Model;
 
 namespace RhManagementApi.Repositories
@@ -10,7 +11,7 @@ namespace RhManagementApi.Repositories
         {
         }
 
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
@@ -31,5 +32,80 @@ namespace RhManagementApi.Repositories
             await _context.SaveChangesAsync();
             return user;
         }
+
+        public async Task<BasePaginationList<UserWithRoleDto>> GetUsersByFilters(int pageNumber, int pageSize, string? role, string? searchTerm)
+        {
+            var usersQuery = _context.Users.AsQueryable();
+
+            // Filter by role if specified
+            if (!string.IsNullOrEmpty(role))
+            {
+                switch (role)
+                {
+                    case "Admin":
+                        usersQuery = usersQuery.OfType<Admin>();
+                        break;
+                    case "RH":
+                        usersQuery = usersQuery.OfType<RH>();
+                        break;
+                    case "Manager":
+                        usersQuery = usersQuery.OfType<Manager>();
+                        break;
+                    case "Employee":
+                        usersQuery = usersQuery.OfType<Employee>();
+                        break;
+                    default:
+                        throw new ArgumentException("Invalid role specified");
+                }
+            }
+
+            // Search by name if a search term is provided
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                usersQuery = usersQuery.Where(u =>
+                    u.FirstName.Contains(searchTerm) ||
+                    u.LastName.Contains(searchTerm));
+            }
+
+            var totalUsers = await usersQuery.CountAsync();
+            var totalPage = (int)Math.Ceiling((double)totalUsers / pageSize);
+
+            // Apply pagination
+            var users = await usersQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(user => new UserWithRoleDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Cin = user.Cin,
+                    Email = user.Email,
+                    Role = GetUserRole(user),
+                    Picture = user.Picture
+                })
+                .ToListAsync();
+            return new BasePaginationList<UserWithRoleDto> { TotalPage = totalPage, Datas = users };
+        }
+
+        private static string GetUserRole(User user)
+        {
+            if (user is Admin)
+            {
+                return "Admin";
+            }
+            else if (user is RH)
+            {
+                return "RH";
+            }
+            else if (user is Manager)
+            {
+                return "Manager";
+            }
+            else
+            {
+                return "Employee";
+            }
+        }
     }
-} 
+}

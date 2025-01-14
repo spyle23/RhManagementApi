@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RhManagementApi.Data;
@@ -11,9 +12,11 @@ using RhManagementApi.Data;
 namespace RhManagementApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250107165404_add-employee-record")]
+    partial class addemployeerecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -284,9 +287,6 @@ namespace RhManagementApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Picture")
-                        .HasColumnType("text");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -332,7 +332,6 @@ namespace RhManagementApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int?>("RHId")
-                        .IsRequired()
                         .HasColumnType("integer");
 
                     b.Property<int?>("TeamId")
@@ -394,8 +393,10 @@ namespace RhManagementApi.Migrations
                         .IsRequired();
 
                     b.HasOne("RhManagementApi.Model.Employee", "Employee")
-                        .WithMany("Leaves")
-                        .HasForeignKey("EmployeeId");
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Admin");
 
@@ -456,18 +457,14 @@ namespace RhManagementApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RhManagementApi.Model.RH", "Rh")
+                    b.HasOne("RhManagementApi.Model.RH", null)
                         .WithMany("ManagedEmployees")
-                        .HasForeignKey("RHId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("RHId");
 
                     b.HasOne("RhManagementApi.Model.Team", "Team")
                         .WithMany("Employees")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Rh");
 
                     b.Navigation("Team");
                 });
@@ -498,11 +495,6 @@ namespace RhManagementApi.Migrations
             modelBuilder.Entity("RhManagementApi.Model.Admin", b =>
                 {
                     b.Navigation("ManagedLeaves");
-                });
-
-            modelBuilder.Entity("RhManagementApi.Model.Employee", b =>
-                {
-                    b.Navigation("Leaves");
                 });
 
             modelBuilder.Entity("RhManagementApi.Model.Manager", b =>

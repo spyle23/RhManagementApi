@@ -11,4 +11,15 @@ namespace RhManagementApi.DTOs
         [Required]
         public string Password { get; set; } = string.Empty;
     }
+
+    public class AuthReturnDto
+    {
+        [Required]
+        public string Token { get; set; } = string.Empty;
+        [Required]
+        public string Role { get; set; } = string.Empty;
+
+        [Required]
+        public int UserId { get; set; }
+    }
 } 

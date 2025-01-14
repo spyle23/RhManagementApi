@@ -45,6 +45,24 @@ namespace RhManagementApi.Data
                 .HasForeignKey(e => e.TeamId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+
+            modelBuilder.Entity<Leave>()
+            .HasOne(l => l.Employee)
+            .WithMany(e => e.Leaves)
+            .HasForeignKey(l => l.EmployeeId)
+            .IsRequired(false);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Rh)
+                .WithMany(t => t.ManagedEmployees)
+                .HasForeignKey(e => e.RHId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EmployeeRecord>()
+                .HasOne(er => er.Employee)
+                .WithOne()
+                .HasForeignKey<EmployeeRecord>(er => er.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
-} 
+}

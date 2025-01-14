@@ -158,5 +158,35 @@ namespace RhManagementApi.Controllers
         {
             return role is "Admin" or "RH" or "Manager" or "Employee";
         }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetUserById(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Cin = user.Cin,
+                Email = user.Email,
+                Picture = user.Picture
+            };
+
+            return Ok(userDto);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<BasePaginationList<UserWithRoleDto>>> GetUsersFilters(int pageNumber = 1, int pageSize = 10, string? searchTerm = null, string? role = null)
+        {
+            var usersQuery = await _userRepository.GetUsersByFilters(pageNumber, pageSize, role, searchTerm);
+            return Ok(usersQuery);
+        }
     }
-} 
+}
