@@ -52,12 +52,6 @@ namespace RhManagementApi.Data
             .HasForeignKey(l => l.EmployeeId)
             .IsRequired(false);
 
-            modelBuilder.Entity<Employee>()
-                .HasOne(e => e.Rh)
-                .WithMany(t => t.ManagedEmployees)
-                .HasForeignKey(e => e.RHId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             modelBuilder.Entity<EmployeeRecord>()
                 .HasOne(er => er.Employee)
                 .WithOne()

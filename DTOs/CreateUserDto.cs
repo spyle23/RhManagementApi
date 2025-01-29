@@ -35,5 +35,8 @@ namespace RhManagementApi.DTOs
 
         public string? ManagementLevel { get; set; }
         public int? YearsOfExperience { get; set; }
+
+        public string? Picture { get; set; }
+        public int? Id { get; set; }
     }
 }

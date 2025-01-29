@@ -9,7 +9,5 @@ namespace RhManagementApi.Model
         
         [Required]
         public string Certification { get; set; } = string.Empty;
-        
-        public virtual ICollection<Employee> ManagedEmployees { get; set; } = new List<Employee>();
     }
 }

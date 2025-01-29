@@ -79,6 +79,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")), // Path to your directory
+    RequestPath = "/Uploads" // URL path to access the files
+});
+
 app.UseHttpsRedirection();
 app.UseCors(AllowOrigins);
 

@@ -13,10 +13,33 @@ namespace RhManagementApi.Controllers
     public class LeaveController : ControllerBase
     {
         private readonly ILeaveRepository _leaveRepository;
+        private readonly IUserRepository _userRepository;
 
-        public LeaveController(ILeaveRepository leaveRepository)
+        public LeaveController(ILeaveRepository leaveRepository, IUserRepository userRepository)
         {
             _leaveRepository = leaveRepository;
+            _userRepository = userRepository;
+        }
+
+        [HttpGet("admin/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> GetLeavesByAdminFilters(
+            int id, 
+            int pageNumber = 1, 
+            int pageSize = 10, 
+            string? searchTerm = null, 
+            string? status = null, 
+            string? type = null)
+        {
+            try
+            {
+                var leaves = await _leaveRepository.GetLeavesByAdminFilters(id, pageNumber, pageSize, searchTerm, status, type);
+                return Ok(leaves);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost]
@@ -73,14 +96,6 @@ namespace RhManagementApi.Controllers
                         return Forbid("User cannot validate this leave");
                     }
                 }
-                else
-                {
-                    // logic for RH
-                    if (userIdNumber != leave.Employee.RHId)
-                    {
-                        return Forbid("User cannot validate this leave");
-                    }
-                }
             }
 
             // Update the leave status
@@ -113,6 +128,27 @@ namespace RhManagementApi.Controllers
             await _leaveRepository.UpdateAsync(leave);
 
             return Ok(leave);
+        }
+
+        [HttpGet("my-leaves")]
+        [Authorize(Roles = "Employee")]
+        public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> MyLeavesFilter(
+            int pageNumber = 1, 
+            int pageSize = 10, 
+            string? status = null, 
+            string? type = null)
+        {
+            try
+            {
+                var employeeId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var employee = await _userRepository.GetByIdAsync(employeeId);
+                var leaves = await _leaveRepository.GetMyLeavesFilters(employeeId, pageNumber, pageSize, status, type);
+                return Ok(leaves);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

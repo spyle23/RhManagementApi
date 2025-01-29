@@ -14,10 +14,7 @@ namespace RhManagementApi.Model
         public int BalancePermission { get; set; } = 0;
 
         public int? TeamId { get; set; }
-        public virtual Team Team { get; set; } = new Team();
+        public virtual Team Team { get; set; }
         public virtual ICollection<Leave> Leaves { get; set; } = new List<Leave>();
-
-        public int? RHId { get; set; }
-        public virtual RH Rh { get; set; } = new RH();
     }
 }

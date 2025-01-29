@@ -33,6 +33,13 @@ namespace RhManagementApi.Repositories
             return user;
         }
 
+        public async Task<T> CreateEmployeeBasedAsync<T>(T employee) where T : Employee
+        {
+            await this.CreateUserAsync(employee);
+            await _context.Set<T>().AddAsync(employee);
+            return employee;
+        }
+
         public async Task<BasePaginationList<UserWithRoleDto>> GetUsersByFilters(int pageNumber, int pageSize, string? role, string? searchTerm)
         {
             var usersQuery = _context.Users.AsQueryable();
@@ -52,7 +59,7 @@ namespace RhManagementApi.Repositories
                         usersQuery = usersQuery.OfType<Manager>();
                         break;
                     case "Employee":
-                        usersQuery = usersQuery.OfType<Employee>();
+                        usersQuery = usersQuery.OfType<Employee>().Where(u => !(u is Manager) && !(u is RH));
                         break;
                     default:
                         throw new ArgumentException("Invalid role specified");
@@ -66,6 +73,8 @@ namespace RhManagementApi.Repositories
                     u.FirstName.Contains(searchTerm) ||
                     u.LastName.Contains(searchTerm));
             }
+
+            usersQuery = usersQuery.OrderByDescending(u => u.CreatedAt);
 
             var totalUsers = await usersQuery.CountAsync();
             var totalPage = (int)Math.Ceiling((double)totalUsers / pageSize);
@@ -87,8 +96,7 @@ namespace RhManagementApi.Repositories
                 .ToListAsync();
             return new BasePaginationList<UserWithRoleDto> { TotalPage = totalPage, Datas = users };
         }
-
-        private static string GetUserRole(User user)
+        public static string GetUserRole(User user)
         {
             if (user is Admin)
             {
@@ -106,6 +114,34 @@ namespace RhManagementApi.Repositories
             {
                 return "Employee";
             }
+        }
+
+        public async Task<Admin> UpdateAdminAsync(Admin admin)
+        {
+            _context.Admins.Update(admin);
+            await _context.SaveChangesAsync();
+            return admin;
+        }
+
+        public async Task<Manager> UpdateManagerAsync(Manager manager)
+        {
+            _context.Managers.Update(manager);
+            await _context.SaveChangesAsync();
+            return manager;
+        }
+
+        public async Task<RH> UpdateRHAsync(RH rh)
+        {
+            _context.RHs.Update(rh);
+            await _context.SaveChangesAsync();
+            return rh;
+        }
+
+        public async Task<Employee> UpdateEmployeeAsync(Employee employee)
+        {
+            _context.Employees.Update(employee);
+            await _context.SaveChangesAsync();
+            return employee;
         }
     }
 }
