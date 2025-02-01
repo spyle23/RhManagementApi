@@ -24,11 +24,11 @@ namespace RhManagementApi.Controllers
         [HttpGet("admin/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> GetLeavesByAdminFilters(
-            int id, 
-            int pageNumber = 1, 
-            int pageSize = 10, 
-            string? searchTerm = null, 
-            string? status = null, 
+            int id,
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? searchTerm = null,
+            string? status = null,
             string? type = null)
         {
             try
@@ -44,22 +44,57 @@ namespace RhManagementApi.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Employee,Manager,RH")]
-        public async Task<ActionResult<Leave>> CreateLeave(CreateLeaveDto createLeaveDto)
+        public async Task<ActionResult<ListLeavesDto>> CreateLeave(CreateLeaveDto createLeaveDto)
         {
-
+            var user = await _userRepository.GetByIdAsync(createLeaveDto.EmployeeId);
+            if (user == null)
+            {
+                return BadRequest("User does not exist");
+            }
             var leave = new Leave
             {
-                StartDate = createLeaveDto.StartDate,
-                EndDate = createLeaveDto.EndDate,
-                Status = RHStatus.Pending.ToString(), // Convert enum to string if needed
+                StartDate = createLeaveDto.StartDate.ToUniversalTime(),
+                EndDate = createLeaveDto.EndDate.ToUniversalTime(),
+                Status = RHStatus.Pending.ToDisplayValue(), // Convert enum to string if needed
                 Type = createLeaveDto.Type,
-                RHStatus = RHStatus.Pending.ToString(), // Convert enum to string if needed
+                RHStatus = RHStatus.Pending.ToDisplayValue(), // Convert enum to string if needed
                 EmployeeId = createLeaveDto.EmployeeId,
+                Reason = createLeaveDto.Reason,
                 AdminId = createLeaveDto.AdminId
             };
 
-            var createdLeave = await _leaveRepository.AddAsync(leave);
-            return CreatedAtAction(nameof(GetLeaveById), new { id = createdLeave.Id }, createdLeave);
+            var duration = leave.EndDate - leave.StartDate;
+            var days = duration.Days;
+
+
+            if (user is Employee employee)
+            {
+                if (leave.Type == RHType.holiday.ToDisplayValue())
+                {
+                    employee.HolidayBalance -= days;
+                }
+                else
+                {
+                    employee.BalancePermission -= days;
+                }
+
+                // vérifier si la demande est correcte
+                if (employee.BalancePermission < 0 || employee.HolidayBalance < 0)
+                {
+                    return BadRequest("Sold inssufisant");
+                }
+
+                // Mise à jour des soldes si aucun erreur
+                await _userRepository.UpdateEmployeeAsync(employee);
+            }
+
+            if (createLeaveDto.Id != null)
+            {
+                leave.Id = (int)createLeaveDto.Id;
+            }
+
+            var createdLeave = createLeaveDto.Id != null ? await _leaveRepository.UpdateLeave(leave) : await _leaveRepository.AddAsync(leave);
+            return Ok(new ListLeavesDto() { Id = createdLeave.Id, EndDate = createdLeave.EndDate, FirstName = createdLeave.Employee.FirstName, LastName = createdLeave.Employee.LastName, Reason = createdLeave.Reason, RHStatus = createdLeave.RHStatus, Status = createdLeave.Status, Type = createdLeave.Type, StartDate = createdLeave.StartDate, AdminId = createdLeave.AdminId });
         }
 
         [HttpGet("{id}")]
@@ -100,6 +135,10 @@ namespace RhManagementApi.Controllers
 
             // Update the leave status
             leave.RHStatus = status;
+            if (status == RHStatus.Rejected.ToDisplayValue())
+            {
+                leave.Status = status;
+            }
             await _leaveRepository.UpdateAsync(leave);
 
             return Ok(leave);
@@ -131,17 +170,16 @@ namespace RhManagementApi.Controllers
         }
 
         [HttpGet("my-leaves")]
-        [Authorize(Roles = "Employee")]
+        [Authorize(Roles = "Employee,Manager,RH")]
         public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> MyLeavesFilter(
-            int pageNumber = 1, 
-            int pageSize = 10, 
-            string? status = null, 
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? status = null,
             string? type = null)
         {
             try
             {
                 var employeeId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                var employee = await _userRepository.GetByIdAsync(employeeId);
                 var leaves = await _leaveRepository.GetMyLeavesFilters(employeeId, pageNumber, pageSize, status, type);
                 return Ok(leaves);
             }
@@ -149,6 +187,58 @@ namespace RhManagementApi.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpGet("Employee/Sold")]
+        [Authorize(Roles = "Employee,Manager,RH")]
+        public async Task<ActionResult<LeaveSoldDto>> GetMySold()
+        {
+            var employeeId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var user = await _userRepository.GetByIdAsync(employeeId);
+            if (user is Employee employee)
+            {
+                return Ok(new LeaveSoldDto() { BalancePermission = employee.BalancePermission, HolidayBalance = employee.HolidayBalance });
+            }
+
+            return BadRequest("User is not employee");
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Employee,Manager,RH")]
+        public async Task<ActionResult> DeleteLeave(int id)
+        {
+            var leave = await _leaveRepository.GetByIdAsync(id);
+            if (leave == null)
+            {
+                return NotFound("leave does not exist");
+            }
+
+            var user = await _userRepository.GetByIdAsync(leave.EmployeeId);
+            if (user == null)
+            {
+                return NotFound("user does not exist");
+            }
+
+            await _leaveRepository.DeleteAsync(id);
+
+            var duration = leave.EndDate - leave.StartDate;
+            var days = duration.Days;
+
+            if (user is Employee employee)
+            {
+                if (leave.Type == RHType.holiday.ToDisplayValue())
+                {
+                    employee.HolidayBalance += days;
+                }
+                else
+                {
+                    employee.BalancePermission += days;
+                }
+
+                // Mise à jour des soldes si aucun erreur
+                await _userRepository.UpdateEmployeeAsync(employee);
+            }
+            return Ok(new { message = "Leave was deleted" });
         }
     }
 }

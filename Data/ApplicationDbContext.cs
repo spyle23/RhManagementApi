@@ -22,6 +22,8 @@ namespace RhManagementApi.Data
         public DbSet<Payslip> Payslips { get; set; }
         public DbSet<FileModel> Files { get; set; }
 
+        public DbSet<EmployeeRecord> EmployeeRecords { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -57,6 +59,26 @@ namespace RhManagementApi.Data
                 .WithOne()
                 .HasForeignKey<EmployeeRecord>(er => er.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries<BaseEntity>();
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
     }
 }

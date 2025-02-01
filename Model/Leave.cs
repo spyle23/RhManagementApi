@@ -15,6 +15,9 @@ namespace RhManagementApi.Model
         
         [Required]
         public string Status { get; set; } = string.Empty;
+
+        [Required]
+        public string Reason {get; set; } = string.Empty;
         
         [Required]
         public string Type { get; set; } = string.Empty;

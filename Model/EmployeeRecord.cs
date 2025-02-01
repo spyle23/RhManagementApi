@@ -25,6 +25,9 @@ namespace RhManagementApi.Model
         [Required]
         public string Status { get; set; } = string.Empty;
 
+        [Required]
+        public decimal GrossSalary { get; set; }
+
         public string Cv { get; set; } = string.Empty;
 
         // Navigation property for the one-to-one relationship

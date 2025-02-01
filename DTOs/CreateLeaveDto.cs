@@ -15,9 +15,14 @@ namespace RhManagementApi.DTOs
         public string Type { get; set; } = string.Empty;
 
         [Required]
+        public string Reason {get; set;} = string.Empty;
+
+        [Required]
         public int EmployeeId { get; set; }
 
         [Required]
         public int AdminId { get; set; }
+
+        public int? Id {get; set;}
     }
 } 

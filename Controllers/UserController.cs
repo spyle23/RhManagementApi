@@ -41,7 +41,7 @@ namespace RhManagementApi.Controllers
             // Hash password
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
 
-            var pictureUser = String.Empty;
+            var pictureUser = string.Empty;
 
             if (file != null)
             {
@@ -89,8 +89,6 @@ namespace RhManagementApi.Controllers
                 Cin = dto.Cin,
                 Department = dto.Department,
                 AccessLevel = dto.AccessLevel,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
                 Picture = pictureUser
             };
 
@@ -118,11 +116,9 @@ namespace RhManagementApi.Controllers
                 Cin = dto.Cin,
                 Specialization = dto.Specialization,
                 Certification = dto.Certification,
-                CreatedAt = DateTime.UtcNow,
                 HolidayBalance = 0,
                 BalancePermission = 0,
                 DateOfHiring = ((DateTime)dto.DateOfHiring).ToUniversalTime(),
-                UpdatedAt = DateTime.UtcNow,
                 Picture = pictureUser
             };
 
@@ -153,8 +149,6 @@ namespace RhManagementApi.Controllers
                 HolidayBalance = 0,
                 BalancePermission = 0,
                 DateOfHiring = ((DateTime)dto.DateOfHiring).ToUniversalTime(),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
                 Picture = pictureUser
             };
 
@@ -177,8 +171,6 @@ namespace RhManagementApi.Controllers
                 Cin = dto.Cin,
                 DateOfHiring = ((DateTime)dto.DateOfHiring).ToUniversalTime(),
                 TeamId = dto.TeamId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
                 Picture = pictureUser,
                 HolidayBalance = 0,
                 BalancePermission = 0
@@ -345,6 +337,14 @@ namespace RhManagementApi.Controllers
 
             return Ok(userRoles);
 
+        }
+
+        [HttpGet("Admin/List")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetAdminList()
+        {
+            var admins = await _userRepository.GetAdminList();
+            return Ok(admins);
         }
     }
 }

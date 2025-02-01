@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RhManagementApi.Data;
 using RhManagementApi.DTOs;
+using RhManagementApi.Enums;
 using RhManagementApi.Model;
 
 namespace RhManagementApi.Repositories
@@ -22,7 +23,6 @@ namespace RhManagementApi.Repositories
         {
             return await _context.Leaves
                 .Include(leave => leave.Employee)
-                .ThenInclude(employee => employee as User)
                 .Where(leave => leave.AdminId == adminId)
                 .ToListAsync();
         }
@@ -31,8 +31,7 @@ namespace RhManagementApi.Repositories
         {
             var leavesQuery = _context.Leaves
                 .Include(leave => leave.Employee)
-                .ThenInclude(employee => employee as User)
-                .Where(leave => leave.AdminId == adminId && leave.RHStatus == "Approved");
+                .Where(leave => leave.AdminId == adminId && leave.RHStatus == RHStatus.Approved.ToDisplayValue());
 
             // Filter by status if specified
             if (!string.IsNullOrEmpty(status))
@@ -70,9 +69,11 @@ namespace RhManagementApi.Repositories
                     StartDate = leave.StartDate,
                     EndDate = leave.EndDate,
                     Status = leave.Status,
+                    RHStatus = leave.RHStatus,
                     Type = leave.Type,
                     FirstName = leave.Employee.FirstName,
-                    LastName = leave.Employee.LastName
+                    LastName = leave.Employee.LastName,
+                    Reason = leave.Reason
                 })
                 .ToListAsync();
 
@@ -87,7 +88,6 @@ namespace RhManagementApi.Repositories
         {
             var leavesQuery = _context.Leaves
                 .Include(leave => leave.Employee)
-                .ThenInclude(employee => employee as User)
                 .Where(leave => leave.EmployeeId == employeeId);
 
             // Filter by status if specified
@@ -118,9 +118,12 @@ namespace RhManagementApi.Repositories
                     StartDate = leave.StartDate,
                     EndDate = leave.EndDate,
                     Status = leave.Status,
+                    RHStatus = leave.RHStatus,
                     Type = leave.Type,
                     FirstName = leave.Employee.FirstName,
-                    LastName = leave.Employee.LastName
+                    LastName = leave.Employee.LastName,
+                    AdminId = leave.AdminId,
+                    Reason = leave.Reason
                 })
                 .ToListAsync();
 
@@ -129,6 +132,13 @@ namespace RhManagementApi.Repositories
                 TotalPage = totalPages,
                 Datas = leaves
             };
+        }
+
+        public async Task<Leave> UpdateLeave(Leave leave)
+        {
+            _context.Leaves.Update(leave);
+            await _context.SaveChangesAsync();
+            return leave;
         }
     }
 }

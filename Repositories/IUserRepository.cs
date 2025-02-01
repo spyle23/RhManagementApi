@@ -18,6 +18,8 @@ namespace RhManagementApi.Repositories
         Task<Manager> UpdateManagerAsync(Manager manager);
         Task<RH> UpdateRHAsync(RH rh);
         Task<Employee> UpdateEmployeeAsync(Employee employee);
+
+        Task<IEnumerable<UserDto>> GetAdminList();
         
     }
 }

@@ -143,5 +143,11 @@ namespace RhManagementApi.Repositories
             await _context.SaveChangesAsync();
             return employee;
         }
+
+        public async Task<IEnumerable<UserDto>> GetAdminList()
+        {
+            var users = _context.Users.Where((user) => user is Admin);
+            return await users.Select((user) => new UserDto() { Cin = user.Cin, Email = user.Email, FirstName = user.FirstName, Id = user.Id, LastName = user.LastName, Picture = user.Picture }).ToListAsync();
+        }
     }
 }

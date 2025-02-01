@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Quartz;
+using RhManagementApi.Job;
 
 var AllowOrigins = "MyOrigin";
 var builder = WebApplication.CreateBuilder(args);
@@ -69,6 +71,27 @@ builder.Services.AddCors(options => options.AddPolicy(name: AllowOrigins, policy
     policy.AllowAnyMethod();
     policy.AllowAnyOrigin();
 }));
+
+builder.Services.AddQuartz(q =>
+{
+    var jobKey = JobKey.Create(nameof(EmployeeBalanceUpdateJob));
+    q.AddJob<EmployeeBalanceUpdateJob>(opts => opts.WithIdentity(jobKey));
+
+    // Run every day at midnight to check for updates
+    q.AddTrigger(opts => opts
+                .ForJob(jobKey)
+                .WithIdentity($"{nameof(EmployeeBalanceUpdateJob)}-trigger")
+                .WithCronSchedule("0 0 0 * * ?")); // Every day at midnight
+
+    var paySlipJobKey = JobKey.Create(nameof(PayslipGenerationJob));
+    q.AddJob<PayslipGenerationJob>(opts => opts.WithIdentity(paySlipJobKey));
+
+    q.AddTrigger(opts => opts
+                .ForJob(paySlipJobKey)
+                .WithIdentity($"{nameof(PayslipGenerationJob)}-trigger")
+                .WithCronSchedule("0 0 0 28 * ?"));
+
+});
 
 var app = builder.Build();
 

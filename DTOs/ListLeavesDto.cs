@@ -14,6 +14,9 @@ namespace RhManagementApi.DTOs
 
         [Required]
         public string Status { get; set; } = string.Empty;
+
+        [Required]
+        public string RHStatus {get; set;} = string.Empty;
         [Required]
         public string Type { get; set; } = string.Empty;
 
@@ -22,5 +25,11 @@ namespace RhManagementApi.DTOs
 
         [Required]
         public string LastName { get; set; } = string.Empty;
+
+        [Required]
+        public string Reason { get; set; } = string.Empty;
+
+        [Required]
+        public int AdminId {get; set;}
     }
 }
