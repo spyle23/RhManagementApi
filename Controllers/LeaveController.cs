@@ -21,10 +21,9 @@ namespace RhManagementApi.Controllers
             _userRepository = userRepository;
         }
 
-        [HttpGet("admin/{id}")]
+        [HttpGet("Admin")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> GetLeavesByAdminFilters(
-            int id,
             int pageNumber = 1,
             int pageSize = 10,
             string? searchTerm = null,
@@ -33,8 +32,13 @@ namespace RhManagementApi.Controllers
         {
             try
             {
-                var leaves = await _leaveRepository.GetLeavesByAdminFilters(id, pageNumber, pageSize, searchTerm, status, type);
-                return Ok(leaves);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (int.TryParse(userId, out int userIdNumber))
+                {
+                    var leaves = await _leaveRepository.GetLeavesByAdminFilters(userIdNumber, pageNumber, pageSize, searchTerm, status, type);
+                    return Ok(leaves);
+                }
+                return BadRequest("Failed to get leaves");
             }
             catch (Exception ex)
             {
@@ -108,7 +112,7 @@ namespace RhManagementApi.Controllers
             return Ok(leave);
         }
 
-        [HttpPut("{id}/validate")]
+        [HttpPut("{id}/Validate")]
         [Authorize(Roles = "Manager,RH")]
         public async Task<ActionResult<Leave>> ValidateRHLeave(int id, string status)
         {
@@ -138,13 +142,20 @@ namespace RhManagementApi.Controllers
             if (status == RHStatus.Rejected.ToDisplayValue())
             {
                 leave.Status = status;
+                var duration = leave.EndDate - leave.StartDate;
+                var days = duration.Days;
+                var employee = leave.Employee;
+                employee.BalancePermission = leave.Type == RHType.permission.ToDisplayValue() ? employee.BalancePermission + days : employee.BalancePermission;
+                employee.HolidayBalance = leave.Type == RHType.holiday.ToDisplayValue() ? employee.HolidayBalance + days : employee.HolidayBalance;
+
+                await _userRepository.UpdateEmployeeAsync(employee);
             }
             await _leaveRepository.UpdateAsync(leave);
 
             return Ok(leave);
         }
 
-        [HttpPut("{id}/validate/admin")]
+        [HttpPut("{id}/validate/Admin")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Leave>> ValidateAdminLeave(int id, string status)
         {
@@ -163,6 +174,19 @@ namespace RhManagementApi.Controllers
                     return Forbid("User cannot validate this leave");
                 }
             }
+
+            // check if status is denied, update employee sold
+            if (status == RHStatus.Rejected.ToDisplayValue())
+            {
+                var duration = leave.EndDate - leave.StartDate;
+                var days = duration.Days;
+                var employee = leave.Employee;
+                employee.BalancePermission = leave.Type == RHType.permission.ToDisplayValue() ? employee.BalancePermission + days : employee.BalancePermission;
+                employee.HolidayBalance = leave.Type == RHType.holiday.ToDisplayValue() ? employee.HolidayBalance + days : employee.HolidayBalance;
+
+                await _userRepository.UpdateEmployeeAsync(employee);
+            }
+
             leave.RHStatus = status;
             await _leaveRepository.UpdateAsync(leave);
 
