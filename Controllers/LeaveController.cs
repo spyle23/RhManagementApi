@@ -61,7 +61,7 @@ namespace RhManagementApi.Controllers
                 EndDate = createLeaveDto.EndDate.ToUniversalTime(),
                 Status = RHStatus.Pending.ToDisplayValue(), // Convert enum to string if needed
                 Type = createLeaveDto.Type,
-                RHStatus = RHStatus.Pending.ToDisplayValue(), // Convert enum to string if needed
+                RHStatus = (user is RH || user is Manager) ? RHStatus.Approved.ToDisplayValue() : RHStatus.Pending.ToDisplayValue(), // Convert enum to string if needed
                 EmployeeId = createLeaveDto.EmployeeId,
                 Reason = createLeaveDto.Reason,
                 AdminId = createLeaveDto.AdminId
@@ -102,19 +102,36 @@ namespace RhManagementApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Leave>> GetLeaveById(int id)
+        public async Task<ActionResult<LeaveDetailsDto>> GetLeaveById(int id)
         {
-            var leave = await _leaveRepository.GetByIdAsync(id);
+            var leave = await _leaveRepository.GetLeaveWithEmployeeIdAsync(id);
             if (leave == null)
             {
                 return NotFound();
             }
-            return Ok(leave);
+
+            var response = new LeaveDetailsDto()
+            {
+                Id = leave.Id,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Status = leave.Status,
+                RHStatus = leave.RHStatus,
+                Type = leave.Type,
+                Reason = leave.Reason,
+                AdminId = leave.AdminId,
+                FirstName = leave.Employee.FirstName,
+                LastName = leave.Employee.LastName,
+                HolidayBalance = leave.Employee.HolidayBalance,
+                BalancePermission = leave.Employee.BalancePermission
+            };
+
+            return Ok(response);
         }
 
         [HttpPut("{id}/Validate")]
         [Authorize(Roles = "Manager,RH")]
-        public async Task<ActionResult<Leave>> ValidateRHLeave(int id, string status)
+        public async Task<ActionResult<ListLeavesDto>> ValidateRHLeave(int id, ActionLeaveDto actionLeaveDto)
         {
             var leave = await _leaveRepository.GetLeaveWithEmployeeIdAsync(id);
             if (leave == null)
@@ -138,10 +155,10 @@ namespace RhManagementApi.Controllers
             }
 
             // Update the leave status
-            leave.RHStatus = status;
-            if (status == RHStatus.Rejected.ToDisplayValue())
+            leave.RHStatus = actionLeaveDto.Status;
+            if (actionLeaveDto.Status == RHStatus.Rejected.ToDisplayValue())
             {
-                leave.Status = status;
+                leave.Status = actionLeaveDto.Status;
                 var duration = leave.EndDate - leave.StartDate;
                 var days = duration.Days;
                 var employee = leave.Employee;
@@ -152,12 +169,26 @@ namespace RhManagementApi.Controllers
             }
             await _leaveRepository.UpdateAsync(leave);
 
-            return Ok(leave);
+            var response = new ListLeavesDto()
+            {
+                Id = leave.Id,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Status = leave.Status,
+                RHStatus = leave.RHStatus,
+                Type = leave.Type,
+                Reason = leave.Reason,
+                AdminId = leave.AdminId,
+                FirstName = leave.Employee.FirstName,
+                LastName = leave.Employee.LastName
+            };
+
+            return Ok(response);
         }
 
         [HttpPut("{id}/validate/Admin")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Leave>> ValidateAdminLeave(int id, string status)
+        public async Task<ActionResult<ListLeavesDto>> ValidateAdminLeave(int id, ActionLeaveDto actionLeaveDto)
         {
             var leave = await _leaveRepository.GetLeaveWithEmployeeIdAsync(id);
             if (leave == null)
@@ -176,7 +207,7 @@ namespace RhManagementApi.Controllers
             }
 
             // check if status is denied, update employee sold
-            if (status == RHStatus.Rejected.ToDisplayValue())
+            if (actionLeaveDto.Status == RHStatus.Rejected.ToDisplayValue())
             {
                 var duration = leave.EndDate - leave.StartDate;
                 var days = duration.Days;
@@ -187,10 +218,24 @@ namespace RhManagementApi.Controllers
                 await _userRepository.UpdateEmployeeAsync(employee);
             }
 
-            leave.RHStatus = status;
+            leave.Status = actionLeaveDto.Status;
             await _leaveRepository.UpdateAsync(leave);
 
-            return Ok(leave);
+            var response = new ListLeavesDto()
+            {
+                Id = leave.Id,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Status = leave.Status,
+                RHStatus = leave.RHStatus,
+                Type = leave.Type,
+                Reason = leave.Reason,
+                AdminId = leave.AdminId,
+                FirstName = leave.Employee.FirstName,
+                LastName = leave.Employee.LastName
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("my-leaves")]
