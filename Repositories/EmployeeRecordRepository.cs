@@ -53,5 +53,19 @@ namespace RhManagementApi.Repositories
                 .Include(er => er.Employee)
                 .FirstOrDefaultAsync(er => er.Id == id);
         }
+
+        public async Task<EmployeeRecord> CreateEmployeeRecordWithEmployeeAsync(EmployeeRecord record)
+        {
+            // Include the Employee relation
+            _context.EmployeeRecords.Add(record);
+            await _context.SaveChangesAsync();
+
+            // Explicitly load the Employee relation
+            await _context.Entry(record)
+                .Reference(r => r.Employee)
+                .LoadAsync();
+
+            return record;
+        }
     }
 }

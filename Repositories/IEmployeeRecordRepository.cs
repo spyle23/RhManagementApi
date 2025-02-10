@@ -7,5 +7,6 @@ namespace RhManagementApi.Repositories
     {
         Task<BasePaginationList<EmployeeRecord>> GetEmployeeRecordsByFilters(int pageNumber, int pageSize, string? searchTerm, string? status);
         Task<EmployeeRecord?> GetEmployeeRecordByIdAsync(int id);
+        Task<EmployeeRecord> CreateEmployeeRecordWithEmployeeAsync(EmployeeRecord record);
     }
 } 

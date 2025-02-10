@@ -20,6 +20,6 @@ namespace RhManagementApi.Repositories
         Task<Employee> UpdateEmployeeAsync(Employee employee);
 
         Task<IEnumerable<UserDto>> GetAdminList();
-        
+        Task<IEnumerable<UserDto>> GetEmployeeList();
     }
 }

@@ -51,6 +51,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
+builder.Services.AddScoped<IEmployeeRecordRepository, EmployeeRecordRepository>();
 builder.Services.AddScoped<PdfService>();
 
 // Add JWT Authentication
@@ -104,15 +105,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(AllowOrigins);
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")), // Path to your directory
-    RequestPath = "/Uploads" // URL path to access the files
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+    RequestPath = "/Uploads"
 });
 
 app.UseHttpsRedirection();
-app.UseCors(AllowOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();

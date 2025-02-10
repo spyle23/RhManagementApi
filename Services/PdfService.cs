@@ -27,16 +27,26 @@ namespace RhManagementApi.Services
                     .Add(new Paragraph("Fiche Employée")
                         .SetTextAlignment(TextAlignment.CENTER)
                         .SetFontSize(20))
-                    .Add(new Paragraph($"Nom: {record.Employee.FirstName} {record.Employee.LastName}"))
-                    .Add(new Paragraph($"Email: {record.Employee.Email}"))
-                    .Add(new Paragraph($"Date d'entrée: {record.Employee.DateOfHiring.ToShortDateString()}"))
-                    .Add(new Paragraph($"Position: {record.Poste}"))
-                    .Add(new Paragraph($"Status: {record.Status}"))
-                    .Add(new Paragraph($"Salaire brute: {record.GrossSalary:C}"))
-                    .Add(new Paragraph($"Address: {record.Adresse}"))
-                    .Add(new Paragraph($"Phone: {record.Telephone}"))
-                    .Add(new Paragraph($"Date de naissance: {record.Birthday.ToShortDateString()}"))
-                    .Add(new Paragraph($"Profil: {record.Profil}"))
+                    .Add(CreateBoldUnderlinedParagraph("Nom:"))
+                    .Add(new Paragraph($"{record.Employee.FirstName} {record.Employee.LastName}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Email:"))
+                    .Add(new Paragraph($"{record.Employee.Email}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Date d'entrée:"))
+                    .Add(new Paragraph($"{record.Employee.DateOfHiring.ToShortDateString()}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Position:"))
+                    .Add(new Paragraph($"{record.Poste}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Status:"))
+                    .Add(new Paragraph($"{record.Status}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Salaire brute:"))
+                    .Add(new Paragraph($"{record.GrossSalary} Ar").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Address:"))
+                    .Add(new Paragraph($"{record.Adresse}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Phone:"))
+                    .Add(new Paragraph($"{record.Telephone}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Date de naissance:"))
+                    .Add(new Paragraph($"{record.Birthday.ToShortDateString()}").SetMarginBottom(10))
+                    .Add(CreateBoldUnderlinedParagraph("Profil:"))
+                    .Add(new Paragraph($"{record.Profil}"))
                     .SetBorder(Border.NO_BORDER);
 
                 headerTable.AddCell(infoCell);
@@ -62,10 +72,17 @@ namespace RhManagementApi.Services
                 }
 
                 document.Add(headerTable);
-
                 document.Close();
                 return stream.ToArray();
             }
+        }
+
+        private Paragraph CreateBoldUnderlinedParagraph(string text)
+        {
+            return new Paragraph(text)
+                .SetBold()
+                .SetUnderline()
+                .SetMarginBottom(5);
         }
     }
 } 
