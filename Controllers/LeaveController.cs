@@ -309,5 +309,44 @@ namespace RhManagementApi.Controllers
             }
             return Ok(new { message = "Leave was deleted" });
         }
+
+        [HttpGet("team-leaves")]
+        [Authorize(Roles = "Manager")]
+        public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> GetTeamLeaves(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? status = null,
+            string? type = null)
+        {
+            try
+            {
+                var managerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var leaves = await _leaveRepository.GetTeamLeaves(managerId, pageNumber, pageSize, status, type);
+                return Ok(leaves);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("employee-leaves")]
+        [Authorize(Roles = "RH")]
+        public async Task<ActionResult<BasePaginationList<ListLeavesDto>>> GetEmployeeLeaves(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? status = null,
+            string? type = null)
+        {
+            try
+            {
+                var leaves = await _leaveRepository.GetEmployeeLeaves(pageNumber, pageSize, status, type);
+                return Ok(leaves);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

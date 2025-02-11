@@ -354,5 +354,21 @@ namespace RhManagementApi.Controllers
             var employees = await _userRepository.GetEmployeeList();
             return Ok(employees);
         }
+
+        [HttpGet("Manager/List")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetManagerList()
+        {
+            var managers = await _userRepository.GetManagerList();
+            return Ok(managers);
+        }
+
+        [HttpGet("OnlyEmployees")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetOnlyEmployees(string? searchTerm = null)
+        {
+            var employees = await _userRepository.GetOnlyEmployeesAsync(searchTerm);
+            return Ok(employees);
+        }
     }
 }

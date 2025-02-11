@@ -140,5 +140,104 @@ namespace RhManagementApi.Repositories
             await _context.SaveChangesAsync();
             return leave;
         }
+
+        public async Task<BasePaginationList<ListLeavesDto>> GetTeamLeaves(int managerId, int pageNumber, int pageSize, string? status, string? type)
+        {
+            var leavesQuery = _context.Leaves
+                .Include(l => l.Employee)
+                .ThenInclude(e => e.Team)
+                .Where(l => l.Employee.Team.ManagerId == managerId);
+
+            // Filter by status if specified
+            if (!string.IsNullOrEmpty(status))
+            {
+                leavesQuery = leavesQuery.Where(l => l.Status == status);
+            }
+
+            // Filter by type if specified
+            if (!string.IsNullOrEmpty(type))
+            {
+                leavesQuery = leavesQuery.Where(l => l.Type == type);
+            }
+
+            // Order by creation date
+            leavesQuery = leavesQuery.OrderByDescending(l => l.CreatedAt);
+
+            var totalLeaves = await leavesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalLeaves / pageSize);
+
+            var leaves = await leavesQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(l => new ListLeavesDto
+                {
+                    Id = l.Id,
+                    StartDate = l.StartDate,
+                    EndDate = l.EndDate,
+                    Status = l.Status,
+                    RHStatus = l.RHStatus,
+                    Type = l.Type,
+                    FirstName = l.Employee.FirstName,
+                    LastName = l.Employee.LastName,
+                    Reason = l.Reason,
+                    AdminId = l.AdminId
+                })
+                .ToListAsync();
+
+            return new BasePaginationList<ListLeavesDto>
+            {
+                TotalPage = totalPages,
+                Datas = leaves
+            };
+        }
+
+        public async Task<BasePaginationList<ListLeavesDto>> GetEmployeeLeaves(int pageNumber, int pageSize, string? status, string? type)
+        {
+            var leavesQuery = _context.Leaves
+                .Include(l => l.Employee)
+                .AsQueryable();
+
+            // Filter by status if specified
+            if (!string.IsNullOrEmpty(status))
+            {
+                leavesQuery = leavesQuery.Where(l => l.Status == status);
+            }
+
+            // Filter by type if specified
+            if (!string.IsNullOrEmpty(type))
+            {
+                leavesQuery = leavesQuery.Where(l => l.Type == type);
+            }
+
+            // Order by creation date
+            leavesQuery = leavesQuery.OrderByDescending(l => l.CreatedAt);
+
+            var totalLeaves = await leavesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalLeaves / pageSize);
+
+            var leaves = await leavesQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(l => new ListLeavesDto
+                {
+                    Id = l.Id,
+                    StartDate = l.StartDate,
+                    EndDate = l.EndDate,
+                    Status = l.Status,
+                    RHStatus = l.RHStatus,
+                    Type = l.Type,
+                    FirstName = l.Employee.FirstName,
+                    LastName = l.Employee.LastName,
+                    Reason = l.Reason,
+                    AdminId = l.AdminId
+                })
+                .ToListAsync();
+
+            return new BasePaginationList<ListLeavesDto>
+            {
+                TotalPage = totalPages,
+                Datas = leaves
+            };
+        }
     }
 }

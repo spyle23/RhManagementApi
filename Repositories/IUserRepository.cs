@@ -21,5 +21,8 @@ namespace RhManagementApi.Repositories
 
         Task<IEnumerable<UserDto>> GetAdminList();
         Task<IEnumerable<UserDto>> GetEmployeeList();
+        Task<IEnumerable<UserDto>> GetManagerList();
+
+        Task<IEnumerable<UserDto>> GetOnlyEmployeesAsync(string? searchTerm = null);
     }
 }

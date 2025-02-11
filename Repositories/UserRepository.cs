@@ -163,5 +163,45 @@ namespace RhManagementApi.Repositories
                 Picture = user.Picture 
             }).ToListAsync();
         }
+
+        public async Task<IEnumerable<UserDto>> GetManagerList()
+        {
+            var managers = _context.Users.OfType<Manager>();
+            return await managers.Select(manager => new UserDto()
+            {
+                Cin = manager.Cin,
+                Email = manager.Email,
+                FirstName = manager.FirstName,
+                Id = manager.Id,
+                LastName = manager.LastName,
+                Picture = manager.Picture
+            }).ToListAsync();
+        }
+
+        public async Task<IEnumerable<UserDto>> GetOnlyEmployeesAsync(string? searchTerm = null)
+        {
+            var query = _context.Users
+                .OfType<Employee>()
+                .Where(e => !(e is Manager) && !(e is RH));
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(e => 
+                    e.FirstName.Contains(searchTerm) || 
+                    e.LastName.Contains(searchTerm));
+            }
+
+            return await query
+                .Select(e => new UserDto
+                {
+                    Id = e.Id,
+                    FirstName = e.FirstName,
+                    LastName = e.LastName,
+                    Cin = e.Cin,
+                    Email = e.Email,
+                    Picture = e.Picture
+                })
+                .ToListAsync();
+        }
     }
 }
