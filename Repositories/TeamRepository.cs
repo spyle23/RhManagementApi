@@ -129,11 +129,25 @@ namespace RhManagementApi.Repositories
                 .AnyAsync(e => e.TeamId == teamId);
         }
 
-        public async Task<Team?> GetByManagerIdAsync(int managerId)
+        public async Task<TeamDto?> GetByManagerIdAsync(int managerId)
         {
             return await _context.Teams
-                .Include(t => t.Employees)
-                .FirstOrDefaultAsync(t => t.ManagerId == managerId);
+                .Where(t => t.ManagerId == managerId)
+                .Select(t => new TeamDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Specialty = t.Specialty,
+                    ManagerId = t.ManagerId,
+                    ManagerFirstName = t.Manager.FirstName,
+                    ManagerLastName = t.Manager.LastName,
+                    ManagerEmail = t.Manager.Email,
+                    ManagerPicture = t.Manager.Picture ?? string.Empty,
+                    MemberCount = t.Employees.Count,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<TeamDto> CreateTeamWithManager(CreateTeamDto createTeamDto)
@@ -223,6 +237,49 @@ namespace RhManagementApi.Repositories
                 CreatedAt = team.CreatedAt,
                 UpdatedAt = team.UpdatedAt
             };
+        }
+
+        public async Task<TeamDto?> GetByEmployeeIdAsync(int employeeId)
+        {
+            return await _context.Employees
+                .Where(e => e.Id == employeeId)
+                .Select(e => new TeamDto
+                {
+                    Id = e.Team.Id,
+                    Name = e.Team.Name,
+                    Specialty = e.Team.Specialty,
+                    ManagerId = e.Team.ManagerId,
+                    ManagerFirstName = e.Team.Manager.FirstName,
+                    ManagerLastName = e.Team.Manager.LastName,
+                    ManagerEmail = e.Team.Manager.Email,
+                    ManagerPicture = e.Team.Manager.Picture ?? string.Empty,
+                    MemberCount = e.Team.Employees.Count,
+                    CreatedAt = e.Team.CreatedAt,
+                    UpdatedAt = e.Team.UpdatedAt
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<TeamMemberDto>> GetTeamMembersByEmployeeIdAsync(int employeeId)
+        {
+            return await _context.Employees
+                .Where(e => e.Id == employeeId)
+                .SelectMany(e => e.Team.Employees)
+                .Join(_context.EmployeeRecords,
+                    e => e.Id,
+                    er => er.EmployeeId,
+                    (e, er) => new TeamMemberDto
+                    {
+                        Id = e.Id,
+                        FirstName = e.FirstName,
+                        LastName = e.LastName,
+                        Phone = er.Telephone,
+                        Status = er.Status,
+                        Email = e.Email,
+                        Picture = e.Picture ?? string.Empty,
+                        TeamId = e.TeamId
+                    })
+                .ToListAsync();
         }
     }
 }

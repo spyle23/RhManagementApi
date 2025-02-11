@@ -195,12 +195,13 @@ namespace RhManagementApi.Repositories
         {
             var leavesQuery = _context.Leaves
                 .Include(l => l.Employee)
+                .Where(l => !(l.Employee is Manager) && !(l.Employee is RH)) // Exclude manager leaves
                 .AsQueryable();
 
             // Filter by status if specified
             if (!string.IsNullOrEmpty(status))
             {
-                leavesQuery = leavesQuery.Where(l => l.Status == status);
+                leavesQuery = leavesQuery.Where(l => l.RHStatus == status);
             }
 
             // Filter by type if specified

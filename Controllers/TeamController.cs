@@ -9,7 +9,7 @@ namespace RhManagementApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin,Manager,Employee")]
     public class TeamController : ControllerBase
     {
         private readonly ITeamRepository _teamRepository;
@@ -107,40 +107,63 @@ namespace RhManagementApi.Controllers
         }
 
         [HttpGet("my-team")]
-        [Authorize(Roles = "Manager")]
-        public async Task<ActionResult<Team>> GetMyTeam()
+        [Authorize(Roles = "Manager,Employee")]
+        public async Task<ActionResult<TeamDto>> GetMyTeam()
         {
-            // Get manager ID from token
-            var managerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            // Get user ID and role from token
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
 
-            // Get team by manager ID
-            var team = await _teamRepository.GetByManagerIdAsync(managerId);
-
-            if (team == null)
+            TeamDto? teamDto = null;
+            
+            if (userRole == "Manager")
             {
-                return NotFound("No team found for this manager");
+                // Get team by manager ID
+                teamDto = await _teamRepository.GetByManagerIdAsync(userId);
+            }
+            else if (userRole == "Employee")
+            {
+                // Get team by employee ID
+                teamDto = await _teamRepository.GetByEmployeeIdAsync(userId);
             }
 
-            return Ok(team);
+            if (teamDto == null)
+            {
+                return NotFound("No team found for this user");
+            }
+
+            return Ok(teamDto);
         }
 
         [HttpGet("my-team/members")]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager,Employee")]
         public async Task<ActionResult<IEnumerable<TeamMemberDto>>> GetMyTeamMembers()
         {
-            // Get manager ID from token
-            var managerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            // Get user ID and role from token
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
 
-            // Get team by manager ID
-            var team = await _teamRepository.GetByManagerIdAsync(managerId);
+            IEnumerable<TeamMemberDto> members;
 
-            if (team == null)
+            if (userRole == "Manager")
             {
-                return NotFound("No team found for this manager");
+                // Get team by manager ID
+                var team = await _teamRepository.GetByManagerIdAsync(userId);
+                if (team == null)
+                {
+                    return NotFound("No team found for this manager");
+                }
+                members = await _teamRepository.GetTeamMembers(team.Id);
+            }
+            else if (userRole == "Employee")
+            {
+                members = await _teamRepository.GetTeamMembersByEmployeeIdAsync(userId);
+            }
+            else
+            {
+                return Forbid("Only Managers and Employees can access team members");
             }
 
-            // Get team members
-            var members = await _teamRepository.GetTeamMembers(team.Id);
             return Ok(members);
         }
 

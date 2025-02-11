@@ -10,8 +10,10 @@ namespace RhManagementApi.Repositories
         Task<BasePaginationList<TeamDto>> GetTeamFilters(int pageNumber, int pageSize, string? searchTerm);
         Task<IEnumerable<TeamMemberDto>> GetTeamMembers(int teamId);
         Task<bool> IsTeamEmpty(int teamId);
-        Task<Team?> GetByManagerIdAsync(int managerId);
+        Task<TeamDto?> GetByManagerIdAsync(int managerId);
         Task<TeamDto> CreateTeamWithManager(CreateTeamDto createTeamDto);
         Task<TeamDto> UpdateTeamAsync(int id, UpdateTeamDto updateTeamDto);
+        Task<TeamDto?> GetByEmployeeIdAsync(int employeeId);
+        Task<IEnumerable<TeamMemberDto>> GetTeamMembersByEmployeeIdAsync(int employeeId);
     }
 }
