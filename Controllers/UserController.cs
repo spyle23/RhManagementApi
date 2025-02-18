@@ -107,6 +107,23 @@ namespace RhManagementApi.Controllers
                 throw new ArgumentException("Date of hiring is required for employees");
             }
 
+            var hiringDate = ((DateTime)dto.DateOfHiring).ToUniversalTime();
+            var currentDate = DateTime.UtcNow;
+
+            // Calculate the number of months since hiring
+            int monthsEmployed = ((currentDate.Year - hiringDate.Year) * 12) + 
+                                (currentDate.Month - hiringDate.Month);
+
+            // Adjust if the current day is before the hiring day in the month
+            if (currentDate.Day < hiringDate.Day)
+            {
+                monthsEmployed--;
+            }
+
+            // Calculate balances
+            int holidayBalance = Math.Max(0, monthsEmployed) * 2;
+            int balancePermission = Math.Max(0, monthsEmployed) * 1;
+
             var rh = new RH
             {
                 FirstName = dto.FirstName,
@@ -116,9 +133,9 @@ namespace RhManagementApi.Controllers
                 Cin = dto.Cin,
                 Specialization = dto.Specialization,
                 Certification = dto.Certification,
-                HolidayBalance = 0,
-                BalancePermission = 0,
-                DateOfHiring = ((DateTime)dto.DateOfHiring).ToUniversalTime(),
+                HolidayBalance = holidayBalance,
+                BalancePermission = balancePermission,
+                DateOfHiring = hiringDate,
                 Picture = pictureUser
             };
 
@@ -137,6 +154,23 @@ namespace RhManagementApi.Controllers
                 throw new ArgumentException("Date of hiring is required for employees");
             }
 
+            var hiringDate = ((DateTime)dto.DateOfHiring).ToUniversalTime();
+            var currentDate = DateTime.UtcNow;
+
+            // Calculate the number of months since hiring
+            int monthsEmployed = ((currentDate.Year - hiringDate.Year) * 12) + 
+                                (currentDate.Month - hiringDate.Month);
+
+            // Adjust if the current day is before the hiring day in the month
+            if (currentDate.Day < hiringDate.Day)
+            {
+                monthsEmployed--;
+            }
+
+            // Calculate balances
+            int holidayBalance = Math.Max(0, monthsEmployed) * 2;
+            int balancePermission = Math.Max(0, monthsEmployed) * 1;
+
             var manager = new Manager
             {
                 FirstName = dto.FirstName,
@@ -146,9 +180,9 @@ namespace RhManagementApi.Controllers
                 Cin = dto.Cin,
                 ManagementLevel = dto.ManagementLevel,
                 YearsOfExperience = dto.YearsOfExperience.Value,
-                HolidayBalance = 0,
-                BalancePermission = 0,
-                DateOfHiring = ((DateTime)dto.DateOfHiring).ToUniversalTime(),
+                HolidayBalance = holidayBalance,
+                BalancePermission = balancePermission,
+                DateOfHiring = hiringDate,
                 Picture = pictureUser
             };
 
@@ -162,6 +196,23 @@ namespace RhManagementApi.Controllers
                 throw new ArgumentException("Date of hiring is required for employees");
             }
 
+            var hiringDate = ((DateTime)dto.DateOfHiring).ToUniversalTime();
+            var currentDate = DateTime.UtcNow;
+
+            // Calculate the number of months since hiring
+            int monthsEmployed = ((currentDate.Year - hiringDate.Year) * 12) + 
+                                (currentDate.Month - hiringDate.Month);
+
+            // Adjust if the current day is before the hiring day in the month
+            if (currentDate.Day < hiringDate.Day)
+            {
+                monthsEmployed--;
+            }
+
+            // Calculate balances
+            int holidayBalance = Math.Max(0, monthsEmployed) * 2;
+            int balancePermission = Math.Max(0, monthsEmployed) * 1;
+
             var employee = new Employee
             {
                 FirstName = dto.FirstName,
@@ -169,11 +220,11 @@ namespace RhManagementApi.Controllers
                 Email = dto.Email,
                 Password = passwordHash,
                 Cin = dto.Cin,
-                DateOfHiring = ((DateTime)dto.DateOfHiring).ToUniversalTime(),
+                DateOfHiring = hiringDate,
                 TeamId = dto.TeamId,
                 Picture = pictureUser,
-                HolidayBalance = 0,
-                BalancePermission = 0
+                HolidayBalance = holidayBalance,
+                BalancePermission = balancePermission
             };
 
             return await _userRepository.CreateUserAsync(employee);

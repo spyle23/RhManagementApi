@@ -54,6 +54,7 @@ builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
 builder.Services.AddScoped<IEmployeeRecordRepository, EmployeeRecordRepository>();
 builder.Services.AddScoped<PdfService>();
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
+builder.Services.AddScoped<IPayslipRepository, PayslipRepository>();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
