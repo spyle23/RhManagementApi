@@ -24,5 +24,7 @@ namespace RhManagementApi.Repositories
         Task<IEnumerable<UserDto>> GetManagerList();
 
         Task<IEnumerable<UserDto>> GetOnlyEmployeesAsync(string? searchTerm = null);
+
+        Task<int> GetEmployeeCountForMonth(DateTime date);
     }
 }

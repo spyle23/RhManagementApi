@@ -240,5 +240,19 @@ namespace RhManagementApi.Repositories
                 Datas = leaves
             };
         }
+
+        public async Task<int> GetPendingLeavesCount()
+        {
+            return await _context.Leaves
+                .CountAsync(l => l.Status == RHStatus.Pending.ToDisplayValue());
+        }
+
+        public async Task<int> GetPendingLeavesCountForMonth(DateTime date)
+        {
+            return await _context.Leaves
+                .CountAsync(l => l.Status == RHStatus.Pending.ToDisplayValue() &&
+                                l.CreatedAt!.Value.Year == date.Year &&
+                                l.CreatedAt.Value.Month == date.Month);
+        }
     }
 }

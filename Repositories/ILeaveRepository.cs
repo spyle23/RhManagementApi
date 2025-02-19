@@ -14,5 +14,9 @@ namespace RhManagementApi.Repositories
         Task<BasePaginationList<ListLeavesDto>> GetEmployeeLeaves(int pageNumber, int pageSize, string? status, string? type);
 
         Task<Leave> UpdateLeave(Leave leave);
+
+        Task<int> GetPendingLeavesCount();
+
+        Task<int> GetPendingLeavesCountForMonth(DateTime date);
     }
 }

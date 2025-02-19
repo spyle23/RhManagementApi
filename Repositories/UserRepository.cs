@@ -203,5 +203,12 @@ namespace RhManagementApi.Repositories
                 })
                 .ToListAsync();
         }
+
+        public async Task<int> GetEmployeeCountForMonth(DateTime date)
+        {
+            return await _context.Users
+                .OfType<Employee>()
+                .CountAsync(e => e.DateOfHiring <= date);
+        }
     }
 }
