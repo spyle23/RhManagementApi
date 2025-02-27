@@ -254,5 +254,12 @@ namespace RhManagementApi.Repositories
                                 l.CreatedAt!.Value.Year == date.Year &&
                                 l.CreatedAt.Value.Month == date.Month);
         }
+
+        public async Task<IEnumerable<Leave>> GetLeavesByEmployeeId(int employeeId)
+        {
+            return await _context.Leaves
+                .Where(l => l.EmployeeId == employeeId)
+                .ToListAsync();
+        }
     }
 }

@@ -50,6 +50,26 @@ namespace RhManagementApi.Controllers
         [Authorize(Roles = "Employee,Manager,RH")]
         public async Task<ActionResult<ListLeavesDto>> CreateLeave(CreateLeaveDto createLeaveDto)
         {
+            // Vérification de la date de début
+            var minStartDate = DateTime.UtcNow.AddDays(3);
+            if (createLeaveDto.StartDate.ToUniversalTime() < minStartDate)
+            {
+                return BadRequest("Veuillez effectuer une demande 3 jours avant votre départ");
+            }
+
+            // Vérification des chevauchements de congés
+            var existingLeaves = await _leaveRepository.GetLeavesByEmployeeId(createLeaveDto.EmployeeId);
+
+            foreach (var existingLeave in existingLeaves)
+            {
+                if ((createLeaveDto.StartDate >= existingLeave.StartDate && createLeaveDto.StartDate <= existingLeave.EndDate) ||
+                    (createLeaveDto.EndDate >= existingLeave.StartDate && createLeaveDto.EndDate <= existingLeave.EndDate) ||
+                    (createLeaveDto.StartDate <= existingLeave.StartDate && createLeaveDto.EndDate >= existingLeave.EndDate))
+                {
+                    return BadRequest("Vous avez déjà une demande sur cette période");
+                }
+            }
+
             var user = await _userRepository.GetByIdAsync(createLeaveDto.EmployeeId);
             if (user == null)
             {

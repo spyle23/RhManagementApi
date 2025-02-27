@@ -12,6 +12,7 @@ namespace RhManagementApi.Repositories
         Task<BasePaginationList<ListLeavesDto>> GetMyLeavesFilters(int employeeId, int pageNumber, int pageSize, string? status, string? type);
         Task<BasePaginationList<ListLeavesDto>> GetTeamLeaves(int managerId, int pageNumber, int pageSize, string? status, string? type);
         Task<BasePaginationList<ListLeavesDto>> GetEmployeeLeaves(int pageNumber, int pageSize, string? status, string? type);
+        Task<IEnumerable<Leave>> GetLeavesByEmployeeId(int employeeId);
 
         Task<Leave> UpdateLeave(Leave leave);
 
