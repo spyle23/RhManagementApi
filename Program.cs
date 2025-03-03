@@ -95,8 +95,10 @@ builder.Services.AddQuartz(q =>
                 .ForJob(paySlipJobKey)
                 .WithIdentity($"{nameof(PayslipGenerationJob)}-trigger")
                 .WithCronSchedule("0 0 0 28 * ?"));
-
 });
+
+// Add the Quartz.NET hosted service
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 

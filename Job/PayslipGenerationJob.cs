@@ -25,9 +25,13 @@ namespace RhManagementApi.Job
                 using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                // Get all active employees
-                var employees = await dbContext.EmployeeRecords.Include(a => a.Employee)
+                // Get all active employees with proper includes
+                var employees = await dbContext.EmployeeRecords
+                    .Include(a => a.Employee)
+                    .Where(a => a.Employee != null)  // Ensure we only get records with valid employees
                     .ToListAsync();
+
+                _logger.LogInformation("Starting payslip generation for {Count} employees", employees.Count);
 
                 foreach (var employee in employees)
                 {
@@ -41,21 +45,22 @@ namespace RhManagementApi.Job
                 }
 
                 await dbContext.SaveChangesAsync();
+                _logger.LogInformation("Completed payslip generation for all employees");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while generating payslips");
-                throw; // Quartz will handle the retry based on your configuration
+                throw;
             }
         }
 
         private Payslip GeneratePayslip(EmployeeRecord employee)
         {
-            // Get the current date (28th of the month)
+            // Get the current date in UTC
             var currentDate = DateTime.UtcNow;
 
-            // Get the first day of the current month
-            var firstDayOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1);
+            // Get the first day of the current month in UTC
+            var firstDayOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
             // Check if the employee was hired in the same month as the current date
             bool isHiredInCurrentMonth = employee.Employee.DateOfHiring.Year == currentDate.Year &&
@@ -66,7 +71,9 @@ namespace RhManagementApi.Job
             if (isHiredInCurrentMonth)
             {
                 // Employee was hired in the current month: calculate proportional salary
-                var startDate = employee.Employee.DateOfHiring > firstDayOfMonth ? employee.Employee.DateOfHiring : firstDayOfMonth;
+                var startDate = employee.Employee.DateOfHiring > firstDayOfMonth ? 
+                    DateTime.SpecifyKind(employee.Employee.DateOfHiring, DateTimeKind.Utc) : 
+                    firstDayOfMonth;
 
                 // Calculate the number of days worked in the current month
                 var daysInMonth = DateTime.DaysInMonth(currentDate.Year, currentDate.Month);
@@ -88,20 +95,17 @@ namespace RhManagementApi.Job
             decimal taxRate = 0.20m; // 20%
             decimal netSalary = grossSalary * (1 - taxRate);
 
-
-
-            // Create payslip model
+            // Create payslip model with UTC DateTime
             var payslip = new Payslip
             {
                 EmployeeId = employee.EmployeeId,
                 GrossSalary = grossSalary,
                 NetSalary = netSalary,
                 Bonuses = 0,
-                Month = new DateTime(currentDate.Year, currentDate.Month, currentDate.Day),
+                Month = new DateTime(currentDate.Year, currentDate.Month, currentDate.Day, 0, 0, 0, DateTimeKind.Utc),
             };
 
             return payslip;
-
         }
 
         private async Task SavePayslip(Payslip payslip, ApplicationDbContext dbContext)
